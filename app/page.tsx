@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 
 const features = [
@@ -22,6 +23,22 @@ const features = [
 ];
 
 export default function Home() {
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [showResend, setShowResend] = useState(false);
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResendStatus('sending');
+    await fetch('/api/resend-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: resendEmail }),
+    });
+    setResendStatus('sent');
+    setResendEmail('');
+  };
+
   return (
     <div className="space-y-24 pb-24">
       {/* Hero */}
@@ -34,7 +51,7 @@ export default function Home() {
           依頼・応募・通知・リマインドまで一気通貫。<br />医局の代診業務をデジタル化。
         </p>
 
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Link
             href="/signup"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a3a4a] text-white rounded-xl font-medium hover:bg-[#0f2a36] transition-colors shadow-lg"
@@ -47,6 +64,37 @@ export default function Home() {
           >
             管理者ログイン
           </Link>
+        </div>
+
+        <div>
+          <button
+            onClick={() => setShowResend(!showResend)}
+            className="text-sm text-[#1a6b7a] hover:underline"
+          >
+            個人リンクを忘れた方はこちら
+          </button>
+          {showResend && (
+            <form onSubmit={handleResend} className="mt-3 flex gap-2 max-w-sm">
+              <input
+                type="email"
+                value={resendEmail}
+                onChange={e => setResendEmail(e.target.value)}
+                required
+                placeholder="登録メールアドレス"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]"
+              />
+              <button
+                type="submit"
+                disabled={resendStatus === 'sending'}
+                className="px-4 py-2 bg-[#1a3a4a] text-white text-sm rounded-lg font-medium hover:bg-[#0f2a36] disabled:opacity-50"
+              >
+                {resendStatus === 'sending' ? '送信中...' : '再送'}
+              </button>
+            </form>
+          )}
+          {resendStatus === 'sent' && (
+            <p className="mt-2 text-sm text-green-600">登録済みのアドレスであればリンクをメール送信しました。</p>
+          )}
         </div>
       </section>
 
