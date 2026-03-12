@@ -25,7 +25,7 @@ async function getTransporter() {
       },
     }),
     from: settings.smtp_from || process.env.SMTP_FROM || '代診調整くん',
-    appUrl: settings.app_url || process.env.APP_URL || 'http://localhost:3000',
+    appUrl: settings.app_url || process.env.APP_URL || 'https://daishin-app.vercel.app',
   };
 }
 

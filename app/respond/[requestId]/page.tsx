@@ -92,34 +92,49 @@ export default function RespondPage() {
   };
 
   if (error) {
-    return <div className="text-center py-16"><p className="text-red-500 text-lg">{error}</p></div>;
+    return (
+      <div className="max-w-md mx-auto text-center mt-16">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <img src="/logo-emblem.png" alt="" className="h-10 object-contain" />
+          <span className="font-bold text-[#1a3a4a] text-xl tracking-wide">代診調整</span>
+        </div>
+        <p className="text-red-500 text-lg">{error}</p>
+      </div>
+    );
   }
 
   if (submitted) {
     return (
-      <div className="max-w-md mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-green-700 mb-4">代診調整くん</h1>
-        <div className="bg-green-50 rounded-xl p-6 border border-green-100">
-          <p className="text-green-700 font-bold text-lg mb-2">応募を送信しました！</p>
-          <p className="text-gray-600">依頼者と管理者にメールで通知されました。</p>
+      <div className="max-w-md mx-auto text-center mt-16 space-y-6">
+        <div className="flex items-center justify-center gap-3">
+          <img src="/logo-emblem.png" alt="" className="h-10 object-contain" />
+          <span className="font-bold text-[#1a3a4a] text-xl tracking-wide">代診調整</span>
+        </div>
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+          <div className="text-4xl mb-4">✅</div>
+          <p className="font-bold text-lg text-[#1a3a4a] mb-2">応募を送信しました</p>
+          <p className="text-gray-500 text-sm">依頼者と管理者にメールで通知されました。</p>
         </div>
       </div>
     );
   }
 
   if (!request) {
-    return <div className="text-center py-16 text-gray-400">読み込み中...</div>;
+    return <div className="text-center mt-16 text-gray-400">読み込み中...</div>;
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-green-700">代診調整くん</h1>
-        <p className="text-gray-500 mt-1">代診応募フォーム</p>
+    <div className="max-w-lg mx-auto mt-8 space-y-6">
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center gap-3">
+          <img src="/logo-emblem.png" alt="" className="h-10 object-contain" />
+          <span className="font-bold text-[#1a3a4a] text-xl tracking-wide">代診調整</span>
+        </div>
+        <p className="text-gray-500">代診応募フォーム</p>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h2 className="font-bold text-lg mb-3">依頼内容</h2>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <h2 className="font-bold text-lg text-[#1a3a4a] mb-3">依頼内容</h2>
         <div className="space-y-2 text-sm">
           <div className="flex"><span className="font-medium w-32">依頼者:</span><span>{request.requester_name}先生</span></div>
           <div className="flex"><span className="font-medium w-32">代診日:</span><span>{request.request_date}</span></div>
@@ -132,13 +147,13 @@ export default function RespondPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-4">
-        <h2 className="font-bold text-lg">応募フォーム</h2>
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+        <h2 className="font-bold text-lg text-[#1a3a4a]">応募フォーム</h2>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">あなたの名前</label>
           <select value={selectedToken} onChange={e => setSelectedToken(e.target.value)} required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]">
             <option value="">選択してください</option>
             {doctors.map(d => (
               <option key={d.token} value={d.token}>{d.name}</option>
@@ -149,7 +164,7 @@ export default function RespondPage() {
         <div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={hasExperience} onChange={e => setHasExperience(e.target.checked)}
-              className="rounded text-green-600" />
+              className="rounded text-[#1a6b7a]" />
             <span className="text-sm font-medium text-gray-700">過去に同医療機関での勤務歴がある</span>
           </label>
         </div>
@@ -158,11 +173,11 @@ export default function RespondPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">質問・その他</label>
           <textarea value={questions} onChange={e => setQuestions(e.target.value)} rows={3}
             placeholder="質問や確認事項があれば入力してください"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]" />
         </div>
 
         <button type="submit" disabled={sending}
-          className="w-full px-6 py-3 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-700 disabled:opacity-50">
+          className="w-full px-6 py-3 bg-[#1a3a4a] text-white rounded-xl font-bold text-lg hover:bg-[#0f2a36] transition-colors disabled:opacity-50">
           {sending ? '送信中...' : '代診可能と回答する'}
         </button>
       </form>
