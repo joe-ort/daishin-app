@@ -40,6 +40,10 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   await initDb();
   const db = getDb();
+  // Delete related responses and requests first to avoid foreign key constraints
+  await db.execute({ sql: 'DELETE FROM responses WHERE responder_id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM responses WHERE request_id IN (SELECT id FROM requests WHERE requester_id = ?)', args: [id] });
+  await db.execute({ sql: 'DELETE FROM requests WHERE requester_id = ?', args: [id] });
   await db.execute({ sql: 'DELETE FROM doctors WHERE id = ?', args: [id] });
   return NextResponse.json({ success: true });
 }
