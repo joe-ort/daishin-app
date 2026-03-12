@@ -31,7 +31,7 @@ export default function Home() {
         </h1>
 
         <p className="text-gray-500 text-lg leading-relaxed max-w-md">
-          依頼・応募・通知・リマインドまで一気通貫。医局の代診業務をデジタル化し、先生方の負担を最小限に。
+          依頼・応募・通知・リマインドまで一気通貫。<br />医局の代診業務をデジタル化。
         </p>
 
         <div className="flex gap-4">
