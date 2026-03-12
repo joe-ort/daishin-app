@@ -20,13 +20,7 @@ export default function Nav() {
     <nav className="px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#1a3a4a] rounded-xl flex items-center justify-center">
-            <span className="text-white text-lg font-bold">代</span>
-          </div>
-          <div>
-            <span className="font-bold text-[#1a3a4a] text-lg leading-tight block">代診調整</span>
-            <span className="text-[10px] text-gray-400 tracking-widest uppercase">Medical Scheduling</span>
-          </div>
+          <img src="/logo.png" alt="東京大学整形外科学教室" className="h-10 object-contain" />
         </Link>
         <div className="flex items-center gap-2">
           {links.map(link => (

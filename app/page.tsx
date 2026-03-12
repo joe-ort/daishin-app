@@ -14,22 +14,22 @@ const features = [
   {
     icon: '📝',
     title: '代診依頼',
-    desc: '日時・医療機関・業務内容を入力するだけ。代診可能な先生に自動通知されます。',
+    lines: ['日時・医療機関・業務内容を', '入力するだけ。', '代診可能な先生に自動通知。'],
   },
   {
     icon: '🤝',
     title: '応募・マッチング',
-    desc: '対応可能な先生がワンクリックで応募。依頼者と管理者に即座に通知。',
+    lines: ['対応可能な先生が', 'ワンクリックで応募。', '依頼者と管理者に即座に通知。'],
   },
   {
     icon: '🔔',
     title: '自動リマインド',
-    desc: '代診前日に双方へリマインドメールを自動送信。忘れ防止も万全です。',
+    lines: ['代診前日に双方へ', 'リマインドメールを自動送信。', '忘れ防止も万全です。'],
   },
   {
     icon: '📊',
     title: 'Excel出力',
-    desc: '全依頼・応募データをExcelでいつでもダウンロード。管理業務を効率化。',
+    lines: ['全依頼・応募データを', 'Excelでいつでもダウンロード。', '管理業務を効率化。'],
   },
 ];
 
@@ -123,7 +123,11 @@ export default function Home() {
             <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="text-3xl mb-4">{f.icon}</div>
               <h3 className="font-bold text-lg mb-2">{f.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                {f.lines.map((line, j) => (
+                  <span key={j}>{line}<br /></span>
+                ))}
+              </p>
             </div>
           ))}
         </div>
