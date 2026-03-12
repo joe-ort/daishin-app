@@ -17,9 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${geist.className} bg-gray-50 min-h-screen`}>
+      <body className={`${geist.className} min-h-screen`}>
         <Nav />
-        <main className="max-w-4xl mx-auto px-4 py-6">
+        <main className="max-w-6xl mx-auto px-6">
           {children}
         </main>
       </body>
