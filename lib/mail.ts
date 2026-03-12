@@ -24,7 +24,7 @@ async function getTransporter() {
         pass: settings.smtp_pass || process.env.SMTP_PASS,
       },
     }),
-    from: settings.smtp_from || process.env.SMTP_FROM || '代診調整くん',
+    from: settings.smtp_from || process.env.SMTP_FROM || '代診調整',
     appUrl: settings.app_url || process.env.APP_URL || 'https://daishin-app.vercel.app',
   };
 }
@@ -61,7 +61,7 @@ export async function sendRequestNotification(
       subject: `【代診依頼】${request.request_date} ${request.institution} - ${requesterName}先生より`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1e40af;">代診調整くん</h2>
+          <h2 style="color: #1e40af;">代診調整</h2>
           <p>${requesterName}先生から代診依頼が届いています。</p>
           <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <table style="width: 100%; border-collapse: collapse;">
@@ -114,7 +114,7 @@ export async function sendResponseNotification(
       subject: `【代診応募】${request.request_date} ${request.institution} - ${responderName}先生が対応可能`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1e40af;">代診調整くん</h2>
+          <h2 style="color: #1e40af;">代診調整</h2>
           <p><strong>${responderName}先生</strong>が代診に対応可能と回答しました。</p>
 
           <h3 style="color: #374151; margin-top: 24px;">依頼内容</h3>
@@ -163,7 +163,7 @@ export async function sendReminder(
       subject: `【リマインド】明日の代診: ${institution}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1e40af;">代診調整くん - リマインド</h2>
+          <h2 style="color: #1e40af;">代診調整 - リマインド</h2>
           <p>明日の代診についてのリマインドです。</p>
           <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <table style="width: 100%; border-collapse: collapse;">

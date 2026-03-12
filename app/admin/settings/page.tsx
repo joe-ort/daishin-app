@@ -39,7 +39,7 @@ export default function SettingsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         smtp_host: smtpHost, smtp_port: smtpPort, smtp_user: smtpUser,
-        smtp_pass: smtpPass, smtp_from: smtpFrom || `代診調整くん <${smtpUser}>`, app_url: appUrl,
+        smtp_pass: smtpPass, smtp_from: smtpFrom || `代診調整 <${smtpUser}>`, app_url: appUrl,
       }),
     });
     setSaved(true); setLoading(false);
@@ -99,7 +99,7 @@ export default function SettingsPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">送信元表示名（任意）</label>
-          <input type="text" value={smtpFrom} onChange={e => setSmtpFrom(e.target.value)} placeholder="代診調整くん"
+          <input type="text" value={smtpFrom} onChange={e => setSmtpFrom(e.target.value)} placeholder="代診調整"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" />
         </div>
         <div>

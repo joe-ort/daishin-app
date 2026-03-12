@@ -6,7 +6,7 @@ import Nav from "@/components/Nav";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "代診調整くん",
+  title: "代診調整",
   description: "医局内の代診依頼・調整アプリ",
 };
 

@@ -53,12 +53,12 @@ export async function POST(req: NextRequest) {
         auth: { user: smtpUser, pass: smtpPass },
       });
       await transporter.sendMail({
-        from: settings.smtp_from || '代診調整くん',
+        from: settings.smtp_from || '代診調整',
         to: row.email as string,
         subject: '【代診調整】アカウントが承認されました',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1a3a4a;">代診調整くん</h2>
+            <h2 style="color: #1a3a4a;">代診調整</h2>
             <p>${row.name} 先生</p>
             <p>アカウントが承認されました。以下のリンクから代診依頼が可能です。</p>
             <p style="margin: 24px 0;">
@@ -111,12 +111,12 @@ export async function POST(req: NextRequest) {
       auth: { user: adminEmail, pass: smtpPass },
     });
     await transporter.sendMail({
-      from: settings.smtp_from || '代診調整くん',
+      from: settings.smtp_from || '代診調整',
       to: adminEmail,
       subject: `【代診調整】新規サインアップ申請: ${name}先生`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1a3a4a;">代診調整くん - 新規申請</h2>
+          <h2 style="color: #1a3a4a;">代診調整 - 新規申請</h2>
           <p>新しいサインアップ申請がありました。</p>
           <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <p><strong>氏名:</strong> ${name}</p>
