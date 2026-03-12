@@ -26,8 +26,8 @@ export default function Home() {
     <div className="space-y-24 pb-24">
       {/* Hero */}
       <section className="pt-16 space-y-8 max-w-2xl">
-        <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-[#1a1a1a]">
-          医局外勤管理を、<br />シンプルに。
+        <h1 className="text-3xl lg:text-4xl font-bold leading-tight text-[#1a1a1a]">
+          医局外勤管理をシンプルに
         </h1>
 
         <p className="text-gray-500 text-lg leading-relaxed max-w-md">
