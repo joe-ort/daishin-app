@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
-  { href: '/admin/doctors', label: '先生登録', icon: '👥' },
-  { href: '/admin/reports', label: '一覧・Excel', icon: '📊' },
-  { href: '/admin/settings', label: '設定', icon: '⚙️' },
+  { href: '/admin/doctors', label: '先生登録' },
+  { href: '/admin/reports', label: '一覧・Excel' },
+  { href: '/admin/settings', label: '設定' },
 ];
 
 export default function Nav() {
@@ -34,7 +34,6 @@ export default function Nav() {
                   : 'text-gray-600 hover:bg-white/60 hover:shadow-sm'
               }`}
             >
-              <span className="mr-1.5">{link.icon}</span>
               {link.label}
             </Link>
           ))}
