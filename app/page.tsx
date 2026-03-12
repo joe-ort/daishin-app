@@ -58,16 +58,16 @@ export default function Home() {
 
           <div className="flex gap-4">
             <Link
-              href="/admin/doctors"
+              href="/signup"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a3a4a] text-white rounded-xl font-medium hover:bg-[#0f2a36] transition-colors shadow-lg"
             >
-              <span>▶</span> 今すぐ始める
+              <span>▶</span> サインアップ申請
             </Link>
             <Link
-              href="/admin/reports"
+              href="/admin/doctors"
               className="inline-flex items-center px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-medium hover:border-gray-400 hover:bg-white/50 transition-colors"
             >
-              実績を確認する
+              管理者ログイン
             </Link>
           </div>
         </div>
@@ -160,12 +160,12 @@ export default function Home() {
       {/* CTA */}
       <section className="text-center bg-[#1a3a4a] rounded-3xl p-12 lg:p-16">
         <h2 className="text-3xl font-bold text-white mb-4">代診調整を始めましょう</h2>
-        <p className="text-gray-300 mb-8 max-w-md mx-auto">先生の登録からスタート。数分でセットアップが完了します。</p>
+        <p className="text-gray-300 mb-8 max-w-md mx-auto">サインアップ申請後、管理者の承認を経て利用開始できます。</p>
         <Link
-          href="/admin/doctors"
+          href="/signup"
           className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1a3a4a] rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg"
         >
-          <span>▶</span> 今すぐ始める
+          <span>▶</span> サインアップ申請
         </Link>
       </section>
     </div>

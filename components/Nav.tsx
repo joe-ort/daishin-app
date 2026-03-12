@@ -12,7 +12,7 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/request/') || pathname?.startsWith('/respond/')) {
+  if (pathname?.startsWith('/request/') || pathname?.startsWith('/respond/') || pathname === '/signup') {
     return null;
   }
 
@@ -20,7 +20,8 @@ export default function Nav() {
     <nav className="px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <img src="/logo.png" alt="東京大学整形外科学教室" className="h-10 object-contain" />
+          <img src="/logo-emblem.png" alt="東京大学整形外科学教室" className="h-10 object-contain" />
+          <span className="font-bold text-[#1a3a4a] text-xl tracking-wide">代診調整</span>
         </Link>
         <div className="flex items-center gap-2">
           {links.map(link => (
