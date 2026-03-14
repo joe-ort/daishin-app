@@ -10,7 +10,7 @@ export async function GET() {
 
   const result = await db.execute({
     sql: `SELECT r.id, r.request_date, r.institution, r.start_time, r.end_time,
-                 r.work_type, r.salary, r.is_department_related, r.notes,
+                 r.work_type, r.salary, r.is_department_related, r.notes, r.requester_id,
                  (SELECT COUNT(*) FROM responses res WHERE res.request_id = r.id) as response_count
           FROM requests r
           WHERE r.status = 'open' AND r.request_date >= ?

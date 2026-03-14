@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 const WORK_TYPE_LABELS: Record<string, string> = {
@@ -40,6 +40,14 @@ interface OpenRequest {
   is_department_related: number;
   notes: string;
   response_count: number;
+  requester_id: number;
+}
+
+interface LoggedInUser {
+  id: number;
+  name: string;
+  token: string;
+  doctor_group: string;
 }
 
 export default function Home() {
@@ -48,12 +56,22 @@ export default function Home() {
   const [showResend, setShowResend] = useState(false);
   const [openRequests, setOpenRequests] = useState<OpenRequest[]>([]);
 
-  useEffect(() => {
+  // Login state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+
+  const fetchOpenRequests = useCallback(() => {
     fetch('/api/requests/open')
       .then(res => res.json())
       .then(data => setOpenRequests(data))
       .catch(() => {});
   }, []);
+
+  useEffect(() => { fetchOpenRequests(); }, [fetchOpenRequests]);
 
   const handleResend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +84,50 @@ export default function Home() {
     setResendStatus('sent');
     setResendEmail('');
   };
+
+  const handleDoctorLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    const res = await fetch('/api/doctors');
+    const doctors = await res.json();
+    const found = doctors.find((d: LoggedInUser & { email: string }) => d.email === loginEmail);
+    if (found) {
+      setLoggedInUser(found);
+    } else {
+      setLoginError('登録されていないメールアドレスです');
+    }
+  };
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPassword === 'UTort') {
+      setIsAdmin(true);
+      setShowAdminLogin(false);
+    } else {
+      alert('パスワードが正しくありません');
+    }
+  };
+
+  const handleLogout = () => {
+    setLoggedInUser(null);
+    setIsAdmin(false);
+    setLoginEmail('');
+    setAdminPassword('');
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('この依頼を削除しますか？')) return;
+    const body: { id: number; token?: string } = { id };
+    if (loggedInUser) body.token = loggedInUser.token;
+    await fetch('/api/requests', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    fetchOpenRequests();
+  };
+
+  const isLoggedIn = loggedInUser || isAdmin;
 
   return (
     <div className="space-y-24 pb-24">
@@ -127,8 +189,8 @@ export default function Home() {
       </section>
 
       {/* Open Requests */}
-      {openRequests.length > 0 && (
-        <section className="space-y-6">
+      <section className="space-y-6">
+        <div className="flex items-end justify-between">
           <div>
             <span className="text-sm text-[#1a6b7a] font-medium tracking-wider">募集中</span>
             <h2 className="text-3xl lg:text-4xl font-bold mt-2 leading-tight">
@@ -136,32 +198,111 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {openRequests.map(req => (
-              <div key={req.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-[#1a3a4a]">{req.request_date}</span>
-                  <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-                    募集中
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-sm text-gray-600">
-                  <p><span className="font-medium text-gray-700">医療機関:</span> {req.institution}</p>
-                  <p><span className="font-medium text-gray-700">時間:</span> {req.start_time}〜{req.end_time}</p>
-                  <p><span className="font-medium text-gray-700">業務:</span> {WORK_TYPE_LABELS[req.work_type] || req.work_type}</p>
-                  {req.salary && <p><span className="font-medium text-gray-700">給与:</span> {req.salary}</p>}
-                  {req.is_department_related === 1 && (
-                    <p className="text-xs text-[#1a6b7a] font-medium">医局関連外勤</p>
-                  )}
-                </div>
-                {req.response_count > 0 && (
-                  <p className="mt-3 text-xs text-green-600 font-medium">{req.response_count}名応募あり</p>
+          {/* Login area */}
+          <div className="text-right">
+            {isLoggedIn ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">
+                  {loggedInUser ? `${loggedInUser.name} 先生` : '管理者'}としてログイン中
+                </span>
+                <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-gray-600 underline">
+                  ログアウト
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <form onSubmit={handleDoctorLogin} className="flex gap-2">
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={e => { setLoginEmail(e.target.value); setLoginError(''); }}
+                    placeholder="メールアドレスでログイン"
+                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm w-48 focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]"
+                  />
+                  <button type="submit" className="px-3 py-1.5 bg-[#1a3a4a] text-white text-sm rounded-lg hover:bg-[#0f2a36]">
+                    ログイン
+                  </button>
+                </form>
+                {!showAdminLogin ? (
+                  <button onClick={() => setShowAdminLogin(true)} className="text-xs text-gray-400 hover:underline self-center">
+                    管理者
+                  </button>
+                ) : (
+                  <form onSubmit={handleAdminLogin} className="flex gap-1">
+                    <input
+                      type="password"
+                      value={adminPassword}
+                      onChange={e => setAdminPassword(e.target.value)}
+                      placeholder="PW"
+                      className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm w-20"
+                    />
+                    <button type="submit" className="px-2 py-1.5 bg-[#1a3a4a] text-white text-sm rounded-lg hover:bg-[#0f2a36]">
+                      OK
+                    </button>
+                  </form>
                 )}
               </div>
-            ))}
+            )}
+            {loginError && <p className="text-xs text-red-500 mt-1">{loginError}</p>}
           </div>
-        </section>
-      )}
+        </div>
+
+        {openRequests.length === 0 ? (
+          <p className="text-gray-400 text-center py-8">現在募集中の代診依頼はありません</p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {openRequests.map(req => {
+              const canApply = loggedInUser && loggedInUser.doctor_group === 'substitute_available' && loggedInUser.id !== req.requester_id;
+              const canDelete = isAdmin || (loggedInUser && loggedInUser.id === req.requester_id);
+
+              return (
+                <div key={req.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-[#1a3a4a]">{req.request_date}</span>
+                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                      募集中
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 text-sm text-gray-600">
+                    <p><span className="font-medium text-gray-700">医療機関:</span> {req.institution}</p>
+                    <p><span className="font-medium text-gray-700">時間:</span> {req.start_time}〜{req.end_time}</p>
+                    <p><span className="font-medium text-gray-700">業務:</span> {WORK_TYPE_LABELS[req.work_type] || req.work_type}</p>
+                    {req.salary && <p><span className="font-medium text-gray-700">給与:</span> {req.salary}</p>}
+                    {req.is_department_related === 1 && (
+                      <p className="text-xs text-[#1a6b7a] font-medium">医局関連外勤</p>
+                    )}
+                  </div>
+                  {req.response_count > 0 && (
+                    <p className="mt-3 text-xs text-green-600 font-medium">{req.response_count}名応募あり</p>
+                  )}
+
+                  {/* Action buttons */}
+                  {isLoggedIn && (
+                    <div className="mt-4 flex gap-2">
+                      {canApply && (
+                        <Link
+                          href={`/respond/${req.id}`}
+                          className="flex-1 text-center px-3 py-2 bg-[#1a6b7a] text-white text-sm rounded-lg font-medium hover:bg-[#145a66] transition-colors"
+                        >
+                          応募する
+                        </Link>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDelete(req.id)}
+                          className="px-3 py-2 bg-red-50 text-red-600 text-sm rounded-lg font-medium hover:bg-red-100 transition-colors"
+                        >
+                          削除
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Features */}
       <section className="space-y-12">
