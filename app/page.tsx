@@ -60,9 +60,6 @@ const WORK_TYPES = [
 ];
 
 export default function Home() {
-  const [resendEmail, setResendEmail] = useState('');
-  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [showResend, setShowResend] = useState(false);
   const [openRequests, setOpenRequests] = useState<OpenRequest[]>([]);
 
   // Login state
@@ -94,18 +91,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => { fetchOpenRequests(); }, [fetchOpenRequests]);
-
-  const handleResend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setResendStatus('sending');
-    await fetch('/api/resend-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: resendEmail }),
-    });
-    setResendStatus('sent');
-    setResendEmail('');
-  };
 
   const handleDoctorLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,36 +177,6 @@ export default function Home() {
           依頼・応募・通知・リマインドまで一気通貫。<br />医局の代診業務をデジタル化。
         </p>
 
-        <div>
-          <button
-            onClick={() => setShowResend(!showResend)}
-            className="text-sm text-[#1a6b7a] hover:underline"
-          >
-            個人リンクを忘れた方はこちら
-          </button>
-          {showResend && (
-            <form onSubmit={handleResend} className="mt-3 flex gap-2 max-w-sm">
-              <input
-                type="email"
-                value={resendEmail}
-                onChange={e => setResendEmail(e.target.value)}
-                required
-                placeholder="登録メールアドレス"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]"
-              />
-              <button
-                type="submit"
-                disabled={resendStatus === 'sending'}
-                className="px-4 py-2 bg-[#1a3a4a] text-white text-sm rounded-lg font-medium hover:bg-[#0f2a36] disabled:opacity-50"
-              >
-                {resendStatus === 'sending' ? '送信中...' : '再送'}
-              </button>
-            </form>
-          )}
-          {resendStatus === 'sent' && (
-            <p className="mt-2 text-sm text-green-600">登録済みのアドレスであればリンクをメール送信しました。</p>
-          )}
-        </div>
       </section>
 
       {/* Open Requests */}
