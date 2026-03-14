@@ -15,13 +15,33 @@ const WORK_TYPES = [
   { value: 'other', label: 'その他' },
 ];
 
+const WORK_TYPE_LABELS: Record<string, string> = {
+  outpatient: '外来',
+  outpatient_surgery: '外来＋手術',
+  surgery: '手術',
+  other: 'その他',
+};
+
+interface MyRequest {
+  id: number;
+  request_date: string;
+  institution: string;
+  start_time: string;
+  end_time: string;
+  work_type: string;
+  salary: string;
+  status: string;
+}
+
 export default function RequestPage() {
   const params = useParams();
   const token = params.token as string;
 
   const [doctorName, setDoctorName] = useState('');
+  const [doctorId, setDoctorId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [myRequests, setMyRequests] = useState<MyRequest[]>([]);
 
   const [requestDate, setRequestDate] = useState('');
   const [institution, setInstitution] = useState('');
@@ -41,9 +61,19 @@ export default function RequestPage() {
     }
     const data = await res.json();
     setDoctorName(data.doctor.name);
+    setDoctorId(data.doctor.id);
   }, [token]);
 
+  const fetchMyRequests = useCallback(async () => {
+    if (doctorId === null) return;
+    const res = await fetch('/api/requests');
+    const all = await res.json();
+    const mine = all.filter((r: MyRequest & { requester_id: number }) => r.requester_id === doctorId);
+    setMyRequests(mine);
+  }, [doctorId]);
+
   useEffect(() => { fetchDoctor(); }, [fetchDoctor]);
+  useEffect(() => { fetchMyRequests(); }, [fetchMyRequests]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +88,16 @@ export default function RequestPage() {
     });
     setSubmitted(true);
     setSending(false);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('この依頼を取り消しますか？')) return;
+    await fetch('/api/requests', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, token }),
+    });
+    fetchMyRequests();
   };
 
   if (error) {
@@ -97,6 +137,29 @@ export default function RequestPage() {
         </div>
         <p className="text-gray-500">{doctorName} 先生</p>
       </div>
+
+      {/* My Requests */}
+      {myRequests.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h2 className="font-bold text-lg text-[#1a3a4a] mb-3">あなたの依頼一覧</h2>
+          <div className="space-y-3">
+            {myRequests.map(r => (
+              <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <div className="text-sm">
+                  <p className="font-medium">{r.request_date} — {r.institution}</p>
+                  <p className="text-gray-500">{r.start_time}〜{r.end_time} / {WORK_TYPE_LABELS[r.work_type] || r.work_type}</p>
+                </div>
+                <button
+                  onClick={() => handleDelete(r.id)}
+                  className="text-xs text-red-500 hover:text-red-700 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  取消
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
         <h2 className="font-bold text-lg text-[#1a3a4a]">代診依頼フォーム</h2>

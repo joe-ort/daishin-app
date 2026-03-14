@@ -70,3 +70,28 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true, id: Number(result.lastInsertRowid) });
 }
+
+export async function DELETE(req: NextRequest) {
+  const { id, token } = await req.json();
+  await initDb();
+  const db = getDb();
+
+  const request = await db.execute({ sql: 'SELECT * FROM requests WHERE id = ?', args: [id] });
+  if (request.rows.length === 0) {
+    return NextResponse.json({ error: '依頼が見つかりません' }, { status: 404 });
+  }
+
+  // If token is provided, verify that the requester owns this request
+  if (token) {
+    const doctor = await db.execute({ sql: 'SELECT id FROM doctors WHERE token = ?', args: [token] });
+    if (doctor.rows.length === 0 || doctor.rows[0].id !== request.rows[0].requester_id) {
+      return NextResponse.json({ error: '権限がありません' }, { status: 403 });
+    }
+  }
+  // If no token, it's an admin action (admin pages are already password-protected)
+
+  await db.execute({ sql: 'DELETE FROM responses WHERE request_id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM requests WHERE id = ?', args: [id] });
+
+  return NextResponse.json({ success: true });
+}

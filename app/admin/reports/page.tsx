@@ -52,8 +52,7 @@ export default function ReportsPage() {
     }
   };
 
-  useEffect(() => {
-    if (!authenticated) return;
+  const fetchData = () => {
     Promise.all([
       fetch('/api/requests').then(r => r.json()),
       fetch('/api/responses').then(r => r.json()),
@@ -61,7 +60,22 @@ export default function ReportsPage() {
       setRequests(req);
       setResponses(res);
     });
+  };
+
+  useEffect(() => {
+    if (!authenticated) return;
+    fetchData();
   }, [authenticated]);
+
+  const handleDeleteRequest = async (id: number) => {
+    if (!confirm('この依頼を削除しますか？関連する応募も削除されます。')) return;
+    await fetch('/api/requests', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    fetchData();
+  };
 
   const handleDownload = () => {
     window.open('/api/reports', '_blank');
@@ -117,6 +131,7 @@ export default function ReportsPage() {
                   <th className="px-4 py-2 text-left">業務</th>
                   <th className="px-4 py-2 text-left">依頼者</th>
                   <th className="px-4 py-2 text-left">応募数</th>
+                  <th className="px-4 py-2 text-left"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -133,6 +148,11 @@ export default function ReportsPage() {
                         <span className={`px-2 py-0.5 rounded-full text-xs ${resCount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                           {resCount}件
                         </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <button onClick={() => handleDeleteRequest(r.id)} className="text-xs text-red-500 hover:text-red-700 hover:underline">
+                          削除
+                        </button>
                       </td>
                     </tr>
                   );
