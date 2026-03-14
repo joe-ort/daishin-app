@@ -62,13 +62,9 @@ const WORK_TYPES = [
 export default function Home() {
   const [openRequests, setOpenRequests] = useState<OpenRequest[]>([]);
 
-  // Login state
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginError, setLoginError] = useState('');
+  // Login state (synced from Nav via custom event)
   const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   // Request form state
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -92,37 +88,20 @@ export default function Home() {
 
   useEffect(() => { fetchOpenRequests(); }, [fetchOpenRequests]);
 
-  const handleDoctorLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    const res = await fetch('/api/doctors');
-    const doctors = await res.json();
-    const found = doctors.find((d: LoggedInUser & { email: string }) => d.email === loginEmail);
-    if (found) {
-      setLoggedInUser(found);
-    } else {
-      setLoginError('登録されていないメールアドレスです');
-    }
-  };
-
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (adminPassword === 'UTort') {
-      setIsAdmin(true);
-      setShowAdminLogin(false);
-    } else {
-      alert('パスワードが正しくありません');
-    }
-  };
-
-  const handleLogout = () => {
-    setLoggedInUser(null);
-    setIsAdmin(false);
-    setLoginEmail('');
-    setAdminPassword('');
-    setShowRequestForm(false);
-    setRequestSent(false);
-  };
+  // Listen for auth events from Nav
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setLoggedInUser(detail.user);
+      setIsAdmin(detail.admin);
+      if (!detail.user && !detail.admin) {
+        setShowRequestForm(false);
+        setRequestSent(false);
+      }
+    };
+    window.addEventListener('nav-auth', handler);
+    return () => window.removeEventListener('nav-auth', handler);
+  }, []);
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,7 +147,7 @@ export default function Home() {
   return (
     <div className="space-y-24 pb-24">
       {/* Hero */}
-      <section className="pt-16 space-y-8 max-w-2xl">
+      <section className="pt-8 space-y-8 max-w-2xl">
         <h1 className="text-3xl lg:text-4xl font-bold leading-tight text-[#1a1a1a]">
           医局外勤管理をシンプルに
         </h1>
@@ -176,7 +155,6 @@ export default function Home() {
         <p className="text-gray-500 text-lg leading-relaxed max-w-md">
           依頼・応募・通知・リマインドまで一気通貫。<br />医局の代診業務をデジタル化。
         </p>
-
       </section>
 
       {/* Open Requests */}
@@ -189,61 +167,14 @@ export default function Home() {
             </h2>
           </div>
 
-          {/* Login area */}
-          <div className="text-right">
-            {isLoggedIn ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">
-                  {loggedInUser ? `${loggedInUser.name} 先生` : '管理者'}としてログイン中
-                </span>
-                {loggedInUser && (
-                  <button
-                    onClick={() => { setShowRequestForm(!showRequestForm); setRequestSent(false); }}
-                    className="px-3 py-1.5 bg-[#1a3a4a] text-white text-sm rounded-lg font-medium hover:bg-[#0f2a36]"
-                  >
-                    代診依頼を作成
-                  </button>
-                )}
-                <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-gray-600 underline">
-                  ログアウト
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <form onSubmit={handleDoctorLogin} className="flex gap-2">
-                  <input
-                    type="email"
-                    value={loginEmail}
-                    onChange={e => { setLoginEmail(e.target.value); setLoginError(''); }}
-                    placeholder="メールアドレスでログイン"
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm w-48 focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]"
-                  />
-                  <button type="submit" className="px-3 py-1.5 bg-[#1a3a4a] text-white text-sm rounded-lg hover:bg-[#0f2a36]">
-                    ログイン
-                  </button>
-                </form>
-                {!showAdminLogin ? (
-                  <button onClick={() => setShowAdminLogin(true)} className="text-xs text-gray-400 hover:underline self-center">
-                    管理者
-                  </button>
-                ) : (
-                  <form onSubmit={handleAdminLogin} className="flex gap-1">
-                    <input
-                      type="password"
-                      value={adminPassword}
-                      onChange={e => setAdminPassword(e.target.value)}
-                      placeholder="PW"
-                      className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm w-20"
-                    />
-                    <button type="submit" className="px-2 py-1.5 bg-[#1a3a4a] text-white text-sm rounded-lg hover:bg-[#0f2a36]">
-                      OK
-                    </button>
-                  </form>
-                )}
-              </div>
-            )}
-            {loginError && <p className="text-xs text-red-500 mt-1">{loginError}</p>}
-          </div>
+          {loggedInUser && (
+            <button
+              onClick={() => { setShowRequestForm(!showRequestForm); setRequestSent(false); }}
+              className="px-4 py-2 bg-[#1a3a4a] text-white text-sm rounded-lg font-medium hover:bg-[#0f2a36]"
+            >
+              代診依頼を作成
+            </button>
+          )}
         </div>
 
         {/* Request sent message */}
