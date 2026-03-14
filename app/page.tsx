@@ -192,21 +192,6 @@ export default function Home() {
           依頼・応募・通知・リマインドまで一気通貫。<br />医局の代診業務をデジタル化。
         </p>
 
-        <div className="flex flex-wrap gap-4">
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a3a4a] text-white rounded-xl font-medium hover:bg-[#0f2a36] transition-colors shadow-lg"
-          >
-            サインアップ申請
-          </Link>
-          <Link
-            href="/admin/doctors"
-            className="inline-flex items-center px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-medium hover:border-gray-400 hover:bg-white/50 transition-colors"
-          >
-            管理者ログイン
-          </Link>
-        </div>
-
         <div>
           <button
             onClick={() => setShowResend(!showResend)}
