@@ -50,6 +50,15 @@ interface LoggedInUser {
   doctor_group: string;
 }
 
+const HOURS = Array.from({ length: 15 }, (_, i) => `${i + 7}:00`);
+
+const WORK_TYPES = [
+  { value: 'outpatient', label: '外来' },
+  { value: 'outpatient_surgery', label: '外来＋手術' },
+  { value: 'surgery', label: '手術' },
+  { value: 'other', label: 'その他' },
+];
+
 export default function Home() {
   const [resendEmail, setResendEmail] = useState('');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
@@ -63,6 +72,19 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+
+  // Request form state
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestDate, setRequestDate] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [startTime, setStartTime] = useState('9:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [workType, setWorkType] = useState('outpatient');
+  const [salary, setSalary] = useState('');
+  const [isDepartmentRelated, setIsDepartmentRelated] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [sending, setSending] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
 
   const fetchOpenRequests = useCallback(() => {
     fetch('/api/requests/open')
@@ -113,6 +135,35 @@ export default function Home() {
     setIsAdmin(false);
     setLoginEmail('');
     setAdminPassword('');
+    setShowRequestForm(false);
+    setRequestSent(false);
+  };
+
+  const handleRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loggedInUser) return;
+    setSending(true);
+    await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: loggedInUser.token,
+        request_date: requestDate,
+        institution,
+        start_time: startTime,
+        end_time: endTime,
+        work_type: workType,
+        salary,
+        is_department_related: isDepartmentRelated,
+        notes,
+      }),
+    });
+    setSending(false);
+    setRequestSent(true);
+    setShowRequestForm(false);
+    setRequestDate(''); setInstitution(''); setStartTime('9:00'); setEndTime('17:00');
+    setWorkType('outpatient'); setSalary(''); setIsDepartmentRelated(false); setNotes('');
+    fetchOpenRequests();
   };
 
   const handleDelete = async (id: number) => {
@@ -205,6 +256,14 @@ export default function Home() {
                 <span className="text-sm text-gray-600">
                   {loggedInUser ? `${loggedInUser.name} 先生` : '管理者'}としてログイン中
                 </span>
+                {loggedInUser && (
+                  <button
+                    onClick={() => { setShowRequestForm(!showRequestForm); setRequestSent(false); }}
+                    className="px-3 py-1.5 bg-[#1a3a4a] text-white text-sm rounded-lg font-medium hover:bg-[#0f2a36]"
+                  >
+                    代診依頼を作成
+                  </button>
+                )}
                 <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-gray-600 underline">
                   ログアウト
                 </button>
@@ -246,6 +305,91 @@ export default function Home() {
             {loginError && <p className="text-xs text-red-500 mt-1">{loginError}</p>}
           </div>
         </div>
+
+        {/* Request sent message */}
+        {requestSent && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-green-200 text-center">
+            <p className="font-bold text-[#1a3a4a]">✅ 代診依頼を送信しました</p>
+            <p className="text-sm text-gray-500 mt-1">代診可能な先生にメールで通知されました。</p>
+          </div>
+        )}
+
+        {/* Inline request form */}
+        {showRequestForm && loggedInUser && (
+          <form onSubmit={handleRequestSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+            <h3 className="font-bold text-lg text-[#1a3a4a]">代診依頼フォーム</h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">代診希望日</label>
+                <input type="date" value={requestDate} onChange={e => setRequestDate(e.target.value)} required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">医療機関名</label>
+                <input type="text" value={institution} onChange={e => setInstitution(e.target.value)} required
+                  placeholder="例：〇〇病院"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">開始時間</label>
+                <select value={startTime} onChange={e => setStartTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]">
+                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">終了時間</label>
+                <select value={endTime} onChange={e => setEndTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]">
+                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">業務内容</label>
+                <select value={workType} onChange={e => setWorkType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]">
+                  {WORK_TYPES.map(wt => <option key={wt.value} value={wt.value}>{wt.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">給与</label>
+                <input type="text" value={salary} onChange={e => setSalary(e.target.value)}
+                  placeholder="例：50,000円"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={isDepartmentRelated} onChange={e => setIsDepartmentRelated(e.target.checked)}
+                  className="rounded text-[#1a6b7a]" />
+                <span className="text-sm font-medium text-gray-700">医局関連外勤</span>
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">備考</label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+                placeholder="その他の情報があれば入力してください"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]" />
+            </div>
+
+            <div className="flex gap-3">
+              <button type="submit" disabled={sending}
+                className="px-6 py-2.5 bg-[#1a3a4a] text-white rounded-xl font-medium hover:bg-[#0f2a36] transition-colors disabled:opacity-50">
+                {sending ? '送信中...' : '代診依頼を送信'}
+              </button>
+              <button type="button" onClick={() => setShowRequestForm(false)}
+                className="px-4 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                キャンセル
+              </button>
+            </div>
+          </form>
+        )}
 
         {openRequests.length === 0 ? (
           <p className="text-gray-400 text-center py-8">現在募集中の代診依頼はありません</p>
