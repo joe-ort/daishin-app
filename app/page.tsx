@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+
+const WORK_TYPE_LABELS: Record<string, string> = {
+  outpatient: '外来',
+  outpatient_surgery: '外来＋手術',
+  surgery: '手術',
+  other: 'その他',
+};
 
 const features = [
   {
@@ -22,10 +29,31 @@ const features = [
   },
 ];
 
+interface OpenRequest {
+  id: number;
+  request_date: string;
+  institution: string;
+  start_time: string;
+  end_time: string;
+  work_type: string;
+  salary: string;
+  is_department_related: number;
+  notes: string;
+  response_count: number;
+}
+
 export default function Home() {
   const [resendEmail, setResendEmail] = useState('');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [showResend, setShowResend] = useState(false);
+  const [openRequests, setOpenRequests] = useState<OpenRequest[]>([]);
+
+  useEffect(() => {
+    fetch('/api/requests/open')
+      .then(res => res.json())
+      .then(data => setOpenRequests(data))
+      .catch(() => {});
+  }, []);
 
   const handleResend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +125,43 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Open Requests */}
+      {openRequests.length > 0 && (
+        <section className="space-y-6">
+          <div>
+            <span className="text-sm text-[#1a6b7a] font-medium tracking-wider">募集中</span>
+            <h2 className="text-3xl lg:text-4xl font-bold mt-2 leading-tight">
+              代診依頼一覧
+            </h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {openRequests.map(req => (
+              <div key={req.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-bold text-[#1a3a4a]">{req.request_date}</span>
+                  <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                    募集中
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-sm text-gray-600">
+                  <p><span className="font-medium text-gray-700">医療機関:</span> {req.institution}</p>
+                  <p><span className="font-medium text-gray-700">時間:</span> {req.start_time}〜{req.end_time}</p>
+                  <p><span className="font-medium text-gray-700">業務:</span> {WORK_TYPE_LABELS[req.work_type] || req.work_type}</p>
+                  {req.salary && <p><span className="font-medium text-gray-700">給与:</span> {req.salary}</p>}
+                  {req.is_department_related === 1 && (
+                    <p className="text-xs text-[#1a6b7a] font-medium">医局関連外勤</p>
+                  )}
+                </div>
+                {req.response_count > 0 && (
+                  <p className="mt-3 text-xs text-green-600 font-medium">{req.response_count}名応募あり</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Features */}
       <section className="space-y-12">
