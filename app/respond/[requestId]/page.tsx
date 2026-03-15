@@ -21,6 +21,7 @@ interface RequestData {
   is_department_related: number;
   notes: string;
   requester_name: string;
+  status: string;
 }
 
 interface Doctor {
@@ -45,26 +46,33 @@ export default function RespondPage() {
   const fetchData = useCallback(async () => {
     try {
       const [reqRes, docRes] = await Promise.all([
-        fetch('/api/requests'),
-        fetch('/api/doctors'),
+        fetch(`/api/requests/detail?id=${requestId}`),
+        fetch('/api/doctors/list'),
       ]);
-      const requests = await reqRes.json();
-      const allDoctors = await docRes.json();
 
-      const found = requests.find((r: RequestData) => r.id === Number(requestId));
-      if (!found) {
-        setError('依頼が見つかりません。');
+      if (!reqRes.ok) {
+        setError('依頼が見つかりません。既に削除された可能性があります。');
         return;
       }
-      setRequest(found);
 
-      // Show only substitute_available doctors
-      const available = allDoctors.filter((d: Doctor & { doctor_group: string }) =>
-        d.doctor_group === 'substitute_available'
-      );
-      setDoctors(available);
-    } catch {
-      setError('データの取得に失敗しました。');
+      const requestData = await reqRes.json();
+      if (requestData.error) {
+        setError(requestData.error);
+        return;
+      }
+
+      if (requestData.status !== 'open') {
+        setError('この依頼は既に締め切られています。');
+        return;
+      }
+
+      setRequest(requestData);
+
+      const doctorList = await docRes.json();
+      setDoctors(Array.isArray(doctorList) ? doctorList : []);
+    } catch (err) {
+      console.error('Respond page fetch error:', err);
+      setError('データの取得に失敗しました。ページを再読み込みしてください。');
     }
   }, [requestId]);
 
@@ -77,17 +85,27 @@ export default function RespondPage() {
       return;
     }
     setSending(true);
-    await fetch('/api/responses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        request_id: Number(requestId),
-        token: selectedToken,
-        has_experience: hasExperience,
-        questions,
-      }),
-    });
-    setSubmitted(true);
+    try {
+      const res = await fetch('/api/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_id: Number(requestId),
+          token: selectedToken,
+          has_experience: hasExperience,
+          questions,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || '送信に失敗しました');
+        setSending(false);
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      alert('送信に失敗しました。ネットワーク接続を確認してください。');
+    }
     setSending(false);
   };
 
