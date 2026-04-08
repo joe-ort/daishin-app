@@ -98,6 +98,11 @@ export default function RespondPage() {
       });
       if (!res.ok) {
         const data = await res.json();
+        if (res.status === 409) {
+          setError('この依頼は既に他の先生が応募済みです。');
+          setSending(false);
+          return;
+        }
         alert(data.error || '送信に失敗しました');
         setSending(false);
         return;

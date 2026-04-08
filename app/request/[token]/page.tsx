@@ -43,6 +43,13 @@ export default function RequestPage() {
   const [submitted, setSubmitted] = useState(false);
   const [myRequests, setMyRequests] = useState<MyRequest[]>([]);
 
+  // プロフィール編集
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileGroup, setProfileGroup] = useState('substitute_available');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+
   const [requestDate, setRequestDate] = useState('');
   const [institution, setInstitution] = useState('');
   const [startTime, setStartTime] = useState('9:00');
@@ -62,13 +69,21 @@ export default function RequestPage() {
     const data = await res.json();
     setDoctorName(data.doctor.name);
     setDoctorId(data.doctor.id);
+
+    // プロフィール情報を取得
+    const profileRes = await fetch(`/api/doctors/profile?token=${token}`);
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      setProfileEmail(profile.email);
+      setProfileGroup(profile.doctor_group);
+    }
   }, [token]);
 
   const fetchMyRequests = useCallback(async () => {
     if (doctorId === null) return;
     const res = await fetch('/api/requests');
     const all = await res.json();
-    const mine = all.filter((r: MyRequest & { requester_id: number }) => r.requester_id === doctorId);
+    const mine = all.filter((r: MyRequest & { requester_id: number }) => r.requester_id === doctorId && r.status === 'open');
     setMyRequests(mine);
   }, [doctorId]);
 
@@ -98,6 +113,24 @@ export default function RequestPage() {
       body: JSON.stringify({ id, token }),
     });
     fetchMyRequests();
+  };
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileMsg('');
+    const res = await fetch('/api/doctors/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, email: profileEmail, doctor_group: profileGroup }),
+    });
+    if (res.ok) {
+      setProfileMsg('保存しました');
+    } else {
+      const data = await res.json();
+      setProfileMsg(data.error || '保存に失敗しました');
+    }
+    setProfileSaving(false);
   };
 
   if (error) {
@@ -136,7 +169,71 @@ export default function RequestPage() {
           <span className="font-bold text-[#1a3a4a] text-xl tracking-wide">代診調整</span>
         </div>
         <p className="text-gray-500">{doctorName} 先生</p>
+        <button
+          onClick={() => { setShowProfile(!showProfile); setProfileMsg(''); }}
+          className="text-xs text-gray-400 hover:text-[#1a6b7a] underline transition-colors"
+        >
+          {showProfile ? '閉じる' : '登録情報を変更'}
+        </button>
       </div>
+
+      {/* プロフィール編集 */}
+      {showProfile && (
+        <form onSubmit={handleProfileSave} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+          <h2 className="font-bold text-lg text-[#1a3a4a]">登録情報の変更</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+            <input
+              type="email"
+              value={profileEmail}
+              onChange={e => setProfileEmail(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a6b7a] focus:border-[#1a6b7a]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">区分</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="doctor_group"
+                  value="substitute_available"
+                  checked={profileGroup === 'substitute_available'}
+                  onChange={e => setProfileGroup(e.target.value)}
+                  className="text-[#1a6b7a]"
+                />
+                <span className="text-sm">代診可能（依頼を受けることも、依頼を出すことも可能）</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="doctor_group"
+                  value="request_only"
+                  checked={profileGroup === 'request_only'}
+                  onChange={e => setProfileGroup(e.target.value)}
+                  className="text-[#1a6b7a]"
+                />
+                <span className="text-sm">依頼のみ（代診依頼のみ可能、他者の依頼には通知されません）</span>
+              </label>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={profileSaving}
+              className="px-5 py-2 bg-[#1a3a4a] text-white rounded-xl font-medium hover:bg-[#0f2a36] transition-colors disabled:opacity-50"
+            >
+              {profileSaving ? '保存中...' : '変更を保存'}
+            </button>
+            {profileMsg && (
+              <span className={`text-sm ${profileMsg === '保存しました' ? 'text-green-600' : 'text-red-500'}`}>
+                {profileMsg}
+              </span>
+            )}
+          </div>
+        </form>
+      )}
 
       {/* My Requests */}
       {myRequests.length > 0 && (

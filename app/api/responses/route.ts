@@ -50,6 +50,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '依頼が見つかりません' }, { status: 404 });
   }
 
+  // Prevent duplicate applications: only accept if still open
+  if (request.status !== 'open') {
+    return NextResponse.json({ error: 'この依頼は既に応募が確定しています。' }, { status: 409 });
+  }
+
   // Get requester
   const requesterResult = await db.execute({ sql: 'SELECT * FROM doctors WHERE id = ?', args: [request.requester_id] });
   const requester = requesterResult.rows[0] as unknown as Doctor;
@@ -58,6 +63,12 @@ export async function POST(req: NextRequest) {
   await db.execute({
     sql: 'INSERT INTO responses (request_id, responder_id, has_experience, questions) VALUES (?, ?, ?, ?)',
     args: [request_id, responder.id, has_experience ? 1 : 0, questions || ''],
+  });
+
+  // Close the request so it no longer appears on the top page
+  await db.execute({
+    sql: "UPDATE requests SET status = 'fulfilled' WHERE id = ?",
+    args: [request_id],
   });
 
   // Get admin email

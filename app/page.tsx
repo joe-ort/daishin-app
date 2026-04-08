@@ -39,7 +39,6 @@ interface OpenRequest {
   salary: string;
   is_department_related: number;
   notes: string;
-  response_count: number;
   requester_id: number;
 }
 
@@ -287,10 +286,6 @@ export default function Home() {
                       <p className="text-xs text-[#1a6b7a] font-medium">医局関連外勤</p>
                     )}
                   </div>
-                  {req.response_count > 0 && (
-                    <p className="mt-3 text-xs text-green-600 font-medium">{req.response_count}名応募あり</p>
-                  )}
-
                   {/* Action buttons */}
                   {isLoggedIn && (
                     <div className="mt-4 flex gap-2">
